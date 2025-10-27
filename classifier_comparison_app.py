@@ -45,7 +45,7 @@ st.markdown("""
         padding: 0rem 1rem;
     }
     .stMetric {
-        background-color: #f0f2f6;
+        background-color: var(--streamlit-sidebar-background-color);
         padding: 10px;
         border-radius: 5px;
     }
@@ -277,11 +277,11 @@ def plot_metrics_comparison(comparison_df, metric_names):
 
 
 def main():
-    st.title("📊 Classifier Comparison Framework")
+    st.title("Classifier Comparison Framework")
     st.markdown("### Compare LS-FLSTSVM with Baseline Classifiers")
     
     # Sidebar for configuration
-    st.sidebar.header("⚙️ Configuration")
+    st.sidebar.header("Configuration")
     
     # Dataset selection
     st.sidebar.subheader("1. Dataset Selection")
@@ -311,7 +311,7 @@ def main():
             n_samples=n_samples, n_features=n_features,
             imbalance_ratio=imb_ratio, cluster_sep=cluster_sep
         )
-        st.sidebar.success(f"✓ Generated: {len(y_train)} train, {len(y_test)} test samples")
+        st.sidebar.success(f"Generated: {len(y_train)} train, {len(y_test)} test samples")
         
     elif dataset_choice == "Upload CSV":
         uploaded_file = st.sidebar.file_uploader("Upload CSV file", type=['csv'])
@@ -354,7 +354,7 @@ def main():
     use_lstwsvm = st.sidebar.checkbox("LS-FLSTSVM", value=LSTWSVM_AVAILABLE, disabled=not LSTWSVM_AVAILABLE)
     
     if not LSTWSVM_AVAILABLE and use_lstwsvm:
-        st.sidebar.warning("⚠️ LS-FLSTSVM not available. Check if Large_Scale_NonL_LSTWSVM.py is in the directory.")
+        st.sidebar.warning("LS-FLSTSVM not available. Check if Large_Scale_NonL_LSTWSVM.py is in the directory.")
     
     # Cross-validation settings
     st.sidebar.subheader("3. Evaluation Settings")
@@ -362,12 +362,12 @@ def main():
     cv_folds = st.sidebar.slider("CV Folds:", 3, 10, 5) if use_cv else 5
     
     # Run button
-    run_comparison = st.sidebar.button("🚀 Run Comparison", type="primary")
+    run_comparison = st.sidebar.button("Run Comparison", type="primary")
     
     # Main content area
     if X_train is not None:
         # Display dataset info
-        st.subheader("📊 Dataset Information")
+        st.subheader("Dataset Information")
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -393,7 +393,7 @@ def main():
     
     # Run comparison
     if run_comparison and X_train is not None:
-        st.subheader("🔬 Running Comparison...")
+        st.subheader("Running Comparison...")
         
         # Initialize models
         models = {}
@@ -489,17 +489,17 @@ def main():
                     }
                     all_metrics.append(metrics_dict)
                 
-                st.success(f"✓ {name} completed")
+                st.success(f"{name} completed")
                 
             except Exception as e:
-                st.error(f"❌ {name} failed: {str(e)}")
+                st.error(f"{name} failed: {str(e)}")
             
             progress_bar.progress((idx + 1) / len(models))
         
-        status_text.text("✅ All models completed!")
+        status_text.text("All models completed!")
         
         # Display results
-        st.subheader("📈 Results")
+        st.subheader("Results")
         
         # Metrics table
         st.write("**Performance Metrics:**")
@@ -510,7 +510,7 @@ def main():
         # Download metrics as CSV
         csv = metrics_df.to_csv()
         st.download_button(
-            label="📥 Download Metrics as CSV",
+            label="Download Metrics as CSV",
             data=csv,
             file_name="classifier_comparison_metrics.csv",
             mime="text/csv"
@@ -518,7 +518,7 @@ def main():
         
         # Visualizations (only for non-CV mode)
         if not use_cv:
-            st.subheader("📊 Visualizations")
+            st.subheader("Visualizations")
             
             # Metrics comparison bar chart
             st.write("**Metrics Comparison:**")
