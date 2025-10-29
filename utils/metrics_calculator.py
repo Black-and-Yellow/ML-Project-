@@ -1,38 +1,17 @@
-"""
-Comprehensive Metrics Calculator for Binary Classification
-Implements all standard metrics without relying on sklearn's fit() methods
-"""
+# Metrics calculator
 
 import numpy as np
 from typing import Dict, Tuple, Optional
 
 
 class MetricsCalculator:
-    """
-    Calculate comprehensive binary classification metrics
-    Assumes labels are {1, -1}
-    """
+    # Metrics helper class
     
     @staticmethod
     def calculate_all_metrics(y_true: np.ndarray, 
                              y_pred: np.ndarray,
                              y_scores: Optional[np.ndarray] = None) -> Dict[str, float]:
-        """
-        Calculate all classification metrics
-        
-        Parameters:
-        -----------
-        y_true : np.ndarray
-            True labels {1, -1}
-        y_pred : np.ndarray
-            Predicted labels {1, -1}
-        y_scores : np.ndarray, optional
-            Decision scores or probabilities for AUC calculations
-            
-        Returns:
-        --------
-        dict : Dictionary with all metrics
-        """
+        # Calculate all metrics
         metrics = {}
         
         # Basic confusion matrix metrics
@@ -78,13 +57,7 @@ class MetricsCalculator:
     
     @staticmethod
     def confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray) -> Tuple[int, int, int, int]:
-        """
-        Calculate confusion matrix components
-        
-        Returns:
-        --------
-        tn, fp, fn, tp
-        """
+        # Confusion matrix components
         # Convert to {1, -1} if needed
         y_true = np.array(y_true)
         y_pred = np.array(y_pred)
@@ -98,12 +71,12 @@ class MetricsCalculator:
     
     @staticmethod
     def accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-        """Calculate accuracy"""
+        # Calculate accuracy
         return np.mean(y_true == y_pred)
     
     @staticmethod
     def precision(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-        """Calculate precision (positive predictive value)"""
+        # Calculate precision
         tn, fp, fn, tp = MetricsCalculator.confusion_matrix(y_true, y_pred)
         if tp + fp == 0:
             return 0.0
@@ -111,7 +84,7 @@ class MetricsCalculator:
     
     @staticmethod
     def recall(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-        """Calculate recall (sensitivity, true positive rate)"""
+        # Calculate recall
         tn, fp, fn, tp = MetricsCalculator.confusion_matrix(y_true, y_pred)
         if tp + fn == 0:
             return 0.0
@@ -119,7 +92,7 @@ class MetricsCalculator:
     
     @staticmethod
     def specificity(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-        """Calculate specificity (true negative rate)"""
+        # Calculate specificity
         tn, fp, fn, tp = MetricsCalculator.confusion_matrix(y_true, y_pred)
         if tn + fp == 0:
             return 0.0
@@ -127,7 +100,7 @@ class MetricsCalculator:
     
     @staticmethod
     def f1_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-        """Calculate F1 score (harmonic mean of precision and recall)"""
+        # Calculate F1 score
         prec = MetricsCalculator.precision(y_true, y_pred)
         rec = MetricsCalculator.recall(y_true, y_pred)
         if prec + rec == 0:
@@ -136,30 +109,21 @@ class MetricsCalculator:
     
     @staticmethod
     def balanced_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-        """Calculate balanced accuracy (average of recall and specificity)"""
+        # Balanced accuracy
         rec = MetricsCalculator.recall(y_true, y_pred)
         spec = MetricsCalculator.specificity(y_true, y_pred)
         return (rec + spec) / 2.0
     
     @staticmethod
     def g_mean(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-        """Calculate G-mean (geometric mean of recall and specificity)"""
+        # G-mean
         rec = MetricsCalculator.recall(y_true, y_pred)
         spec = MetricsCalculator.specificity(y_true, y_pred)
         return np.sqrt(rec * spec)
     
     @staticmethod
     def auc_roc(y_true: np.ndarray, y_scores: np.ndarray) -> float:
-        """
-        Calculate Area Under ROC Curve using trapezoidal rule
-        
-        Parameters:
-        -----------
-        y_true : np.ndarray
-            True labels {1, -1}
-        y_scores : np.ndarray
-            Decision scores (higher = more likely positive)
-        """
+        # AUC-ROC calculation
         # Sort by scores (descending)
         desc_score_indices = np.argsort(y_scores)[::-1]
         y_scores = y_scores[desc_score_indices]
@@ -190,16 +154,7 @@ class MetricsCalculator:
     
     @staticmethod
     def auc_pr(y_true: np.ndarray, y_scores: np.ndarray) -> float:
-        """
-        Calculate Area Under Precision-Recall Curve
-        
-        Parameters:
-        -----------
-        y_true : np.ndarray
-            True labels {1, -1}
-        y_scores : np.ndarray
-            Decision scores (higher = more likely positive)
-        """
+        # AUC-PR calculation
         # Sort by scores (descending)
         desc_score_indices = np.argsort(y_scores)[::-1]
         y_scores = y_scores[desc_score_indices]
@@ -229,13 +184,7 @@ class MetricsCalculator:
     
     @staticmethod
     def get_roc_curve(y_true: np.ndarray, y_scores: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """
-        Get ROC curve coordinates
-        
-        Returns:
-        --------
-        fpr, tpr, thresholds
-        """
+        # ROC curve
         # Sort by scores (descending)
         desc_score_indices = np.argsort(y_scores)[::-1]
         y_scores = y_scores[desc_score_indices]
@@ -261,13 +210,7 @@ class MetricsCalculator:
     
     @staticmethod
     def get_pr_curve(y_true: np.ndarray, y_scores: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """
-        Get Precision-Recall curve coordinates
-        
-        Returns:
-        --------
-        precision, recall, thresholds
-        """
+        # PR curve
         # Sort by scores (descending)
         desc_score_indices = np.argsort(y_scores)[::-1]
         y_scores = y_scores[desc_score_indices]

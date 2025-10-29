@@ -1,7 +1,5 @@
-"""
-Streamlit GUI Application for Classifier Comparison
-Compare LS-FLSTSVM with Linear SVM, Logistic Regression, and Perceptron
-"""
+# Streamlit GUI app
+# Classifier comparison
 
 import streamlit as st
 import numpy as np
@@ -14,12 +12,13 @@ from typing import Dict, List, Tuple, Optional
 import sys
 import os
 
-# Add current directory to path for imports
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models_from_scratch import LinearSVMScratch, LogisticRegressionScratch, PerceptronPocket
-from metrics_calculator import MetricsCalculator
-from dataset_utils import DatasetLoader
+from classifiers import LinearSVMScratch, LogisticRegressionScratch
+from classifiers import TwinSVM
+from utils import MetricsCalculator
+from utils import DatasetLoader
 from sklearn.model_selection import StratifiedKFold
 
 # Try to import LS-FLSTSVM if available
@@ -33,7 +32,7 @@ except ImportError:
 # Set page config
 st.set_page_config(
     page_title="Classifier Comparison Framework",
-    page_icon="📊",
+    page_icon=None,
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -54,7 +53,7 @@ st.markdown("""
 
 
 class LSFLTSVMWrapper:
-    """Wrapper for LS-FLSTSVM to match scikit-learn-like interface"""
+    # LS-FLSTSVM wrapper
     
     def __init__(self, c0=1.0, ir=1.0, c1=1.0, c3=0.5, kernel_type='rbf', kernel_params=None):
         self.c0 = c0
@@ -68,7 +67,7 @@ class LSFLTSVMWrapper:
         self.train_time = 0.0
         
     def fit(self, X, y):
-        """Train the model"""
+        # Train model
         # Combine X and y for LSTWSVM format
         A_train = np.column_stack([X, y])
         
@@ -101,7 +100,7 @@ class LSFLTSVMWrapper:
         return self
     
     def predict(self, X_test):
-        """Predict on test data"""
+        # Predict test
         if not self.trained:
             raise ValueError("Model must be fitted before prediction")
         
@@ -127,26 +126,17 @@ class LSFLTSVMWrapper:
         return y_pred
     
     def decision_function(self, X_test):
-        """Return decision scores (using predictions as proxy)"""
+        # Return scores
         return self.predict(X_test).astype(float)
     
     def score(self, X, y):
-        """Calculate accuracy"""
+        # Calculate accuracy
         y_pred = self.predict(X)
         return np.mean(y_pred == y)
 
 
 def perform_cross_validation(clf, X, y, cv=5):
-    """
-    Perform stratified k-fold cross-validation
-    
-    Returns:
-    --------
-    results : dict
-        Dictionary with mean and std for each metric
-    fold_results : list
-        List of results for each fold
-    """
+    # Stratified k-fold CV
     skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=42)
     
     fold_results = []
@@ -155,9 +145,23 @@ def perform_cross_validation(clf, X, y, cv=5):
         X_train_fold, X_val_fold = X[train_idx], X[val_idx]
         y_train_fold, y_val_fold = y[train_idx], y[val_idx]
         
+        # Check if validation fold has both classes
+        unique_val = np.unique(y_val_fold)
+        if len(unique_val) < 2:
+            st.warning(f"Fold {fold_idx+1} skipped: validation set has only one class")
+            continue
+        
         # Train
-        clf_fold = type(clf)(**clf.__dict__) if not isinstance(clf, LSFLTSVMWrapper) else \
-                   LSFLTSVMWrapper(clf.c0, clf.ir, clf.c1, clf.c3, clf.kernel_type, clf.kernel_params)
+        if isinstance(clf, LSFLTSVMWrapper):
+            clf_fold = LSFLTSVMWrapper(clf.c0, clf.ir, clf.c1, clf.c3, clf.kernel_type, clf.kernel_params)
+        elif isinstance(clf, TwinSVM):
+            clf_fold = TwinSVM(clf.c1, clf.c2, clf.kernel, clf.gamma, clf.degree, clf.coef0)
+        else:
+            try:
+                clf_fold = type(clf)(**{k: v for k, v in clf.__dict__.items() if not k.startswith('_')})
+            except:
+                from copy import deepcopy
+                clf_fold = deepcopy(clf)
         
         try:
             clf_fold.fit(X_train_fold, y_train_fold)
@@ -166,7 +170,11 @@ def perform_cross_validation(clf, X, y, cv=5):
             continue
         
         # Predict
-        y_pred = clf_fold.predict(X_val_fold)
+        try:
+            y_pred = clf_fold.predict(X_val_fold)
+        except Exception as e:
+            st.error(f"Prediction error in fold {fold_idx+1}: {str(e)}")
+            continue
         
         try:
             y_scores = clf_fold.decision_function(X_val_fold)
@@ -174,8 +182,12 @@ def perform_cross_validation(clf, X, y, cv=5):
             y_scores = None
         
         # Calculate metrics
-        metrics = MetricsCalculator.calculate_all_metrics(y_val_fold, y_pred, y_scores)
-        fold_results.append(metrics)
+        try:
+            metrics = MetricsCalculator.calculate_all_metrics(y_val_fold, y_pred, y_scores)
+            fold_results.append(metrics)
+        except Exception as e:
+            st.error(f"Metrics calculation error in fold {fold_idx+1}: {str(e)}")
+            continue
     
     # Aggregate results
     if not fold_results:
@@ -197,7 +209,7 @@ def perform_cross_validation(clf, X, y, cv=5):
 
 
 def plot_confusion_matrix(y_true, y_pred, title="Confusion Matrix"):
-    """Plot confusion matrix"""
+    # Plot confusion matrix
     tn, fp, fn, tp = MetricsCalculator.confusion_matrix(y_true, y_pred)
     
     cm = np.array([[tn, fp], [fn, tp]])
@@ -214,7 +226,7 @@ def plot_confusion_matrix(y_true, y_pred, title="Confusion Matrix"):
 
 
 def plot_roc_curves(results_dict):
-    """Plot ROC curves for all models"""
+    # Plot ROC curves
     fig, ax = plt.subplots(figsize=(8, 6))
     
     for model_name, data in results_dict.items():
@@ -233,7 +245,7 @@ def plot_roc_curves(results_dict):
 
 
 def plot_pr_curves(results_dict):
-    """Plot Precision-Recall curves for all models"""
+    # Plot PR curves
     fig, ax = plt.subplots(figsize=(8, 6))
     
     for model_name, data in results_dict.items():
@@ -251,7 +263,7 @@ def plot_pr_curves(results_dict):
 
 
 def plot_metrics_comparison(comparison_df, metric_names):
-    """Plot bar chart comparing metrics across models"""
+    # Plot metrics comparison
     fig, axes = plt.subplots(2, 4, figsize=(16, 8))
     axes = axes.flatten()
     
@@ -295,11 +307,11 @@ def main():
     
     if dataset_choice == "Breast Cancer (UCI)":
         X_train, X_test, y_train, y_test = DatasetLoader.load_breast_cancer_data()
-        st.sidebar.success(f"✓ Loaded: {len(y_train)} train, {len(y_test)} test samples")
+        st.sidebar.success(f"Loaded: {len(y_train)} train, {len(y_test)} test samples")
         
     elif dataset_choice == "Pima Diabetes":
         X_train, X_test, y_train, y_test = DatasetLoader.load_pima_diabetes()
-        st.sidebar.success(f"✓ Loaded: {len(y_train)} train, {len(y_test)} test samples")
+        st.sidebar.success(f"Loaded: {len(y_train)} train, {len(y_test)} test samples")
         
     elif dataset_choice == "Synthetic NDC":
         n_samples = st.sidebar.slider("Total samples:", 500, 5000, 1000, 100)
@@ -341,7 +353,7 @@ def main():
                 X_train = scaler.fit_transform(X_train)
                 X_test = scaler.transform(X_test)
                 
-                st.sidebar.success(f"✓ Processed: {len(y_train)} train, {len(y_test)} test samples")
+                st.sidebar.success(f"Processed: {len(y_train)} train, {len(y_test)} test samples")
                 
             except Exception as e:
                 st.sidebar.error(f"Error loading file: {str(e)}")
@@ -350,7 +362,7 @@ def main():
     st.sidebar.subheader("2. Select Classifiers")
     use_svm = st.sidebar.checkbox("Linear SVM (SMO)", value=True)
     use_logreg = st.sidebar.checkbox("Logistic Regression", value=True)
-    use_perceptron = st.sidebar.checkbox("Perceptron (Pocket)", value=True)
+    use_twinsvm = st.sidebar.checkbox("Twin SVM", value=True)
     use_lstwsvm = st.sidebar.checkbox("LS-FLSTSVM", value=LSTWSVM_AVAILABLE, disabled=not LSTWSVM_AVAILABLE)
     
     if not LSTWSVM_AVAILABLE and use_lstwsvm:
@@ -406,8 +418,8 @@ def main():
                 learning_rate=0.1, max_iter=1000, reg_lambda=0.01
             )
         
-        if use_perceptron:
-            models['Perceptron'] = PerceptronPocket(max_iter=200)
+        if use_twinsvm:
+            models['Twin SVM'] = TwinSVM(c1=1.0, c2=1.0, kernel='rbf', gamma=1.0)
         
         if use_lstwsvm and LSTWSVM_AVAILABLE:
             models['LS-FLSTSVM'] = LSFLTSVMWrapper(
@@ -553,16 +565,7 @@ def main():
     
     # Footer
     st.sidebar.markdown("---")
-    st.sidebar.info("""
-    **About:**
-    This framework compares LS-FLSTSVM against three baseline classifiers
-    (Linear SVM, Logistic Regression, Perceptron) for class imbalance learning.
-    
-    **Reference:**
-    M. A. Ganaie, M. Tanveer, and C.-T. Lin,
-    "Large-Scale Fuzzy Least Squares Twin SVMs for Class Imbalance Learning,"
-    IEEE Trans. Fuzzy Systems, 2022.
-    """)
+    st.sidebar.info("About: see README")
 
 
 if __name__ == "__main__":

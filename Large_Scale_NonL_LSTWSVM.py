@@ -5,37 +5,7 @@ from LSSMO import LSSMO
 
 
 def Large_Scale_NonL_LSTWSVM(A: np.ndarray, A_test: np.ndarray, FunPara: Dict) -> Tuple[float, np.ndarray, np.ndarray, float, Dict]:
-    """
-    Large Scale Non-Linear Least Squares Twin Support Vector Machine
-    
-    Parameters:
-    -----------
-    A : np.ndarray
-        Training data with labels in last column
-    A_test : np.ndarray
-        Test data with labels in last column
-    FunPara : dict
-        Dictionary containing parameters:
-        - c0: fuzzy membership parameter
-        - ir: imbalance ratio
-        - c1: regularization parameter for model 1
-        - c3: regularization parameter (c3=c4)
-        - kerfPara: kernel parameters dictionary
-        - eps_val: (optional) tolerance value
-    
-    Returns:
-    --------
-    acc : float
-        Classification accuracy (percentage)
-    obsX : np.ndarray
-        True labels from test data
-    Predict_Y : np.ndarray
-        Predicted labels
-    time : float
-        Training time
-    output_struct : dict
-        Dictionary containing function name
-    """
+    # Large-scale non-linear LSTWSVM
     
     start_time = time.time()
     
@@ -180,23 +150,7 @@ def Large_Scale_NonL_LSTWSVM(A: np.ndarray, A_test: np.ndarray, FunPara: Dict) -
 
 
 def kernelfun(X: np.ndarray, kerfPara: Dict, Y: np.ndarray) -> np.ndarray:
-    """
-    Kernel function matching MATLAB kernelfun.m implementation
-    
-    Parameters:
-    -----------
-    X : np.ndarray
-        First data matrix (Xtrain in MATLAB)
-    kerfPara : dict
-        Kernel parameters: {'type': 'rbf'/'lin'/'poly', 'pars': [param1, param2, ...]}
-    Y : np.ndarray
-        Second data matrix (Xt in MATLAB)
-    
-    Returns:
-    --------
-    omega : np.ndarray
-        Kernel matrix
-    """
+    # Kernel function (rbf/lin/poly)
     kernel_type = kerfPara['type']
     kernel_pars = kerfPara['pars']
     
@@ -226,24 +180,7 @@ def kernelfun(X: np.ndarray, kerfPara: Dict, Y: np.ndarray) -> np.ndarray:
 
 
 def nufuzz2(A: np.ndarray, c0: float, ir: float) -> np.ndarray:
-    """
-    Fuzzy membership function - matches MATLAB nufuzz2.m implementation
-    
-    Parameters:
-    -----------
-    A : np.ndarray
-        Input data with labels in last column
-    c0 : float
-        Fuzzy parameter (controls membership spread)
-    ir : float
-        Imbalance ratio
-    
-    Returns:
-    --------
-    finA : np.ndarray
-        Data with class indicator in second-to-last column and 
-        membership values in the last column
-    """
+    # Fuzzy membership computation
     # Separate positive and negative classes
     A_pos = A[A[:, -1] == 1, :-1]
     B_neg = A[A[:, -1] != 1, :-1]

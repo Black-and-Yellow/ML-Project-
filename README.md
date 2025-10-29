@@ -26,7 +26,8 @@ This implementation is particularly effective for datasets with significant clas
 ```
 ├── Large_Scale_NonL_LSTWSVM.py    # Main algorithm implementation
 ├── LSSMO.py                        # Sequential Minimal Optimization solver
-├── models_from_scratch.py          # 3 baseline classifiers (Linear SVM, Logistic Regression, Perceptron)
+├── twin_svm.py                     # Twin SVM implementation (from scratch)
+├── models_from_scratch.py          # Baseline classifiers (Linear SVM, Logistic Regression)
 ├── dataset_utils.py                # Dataset loaders (Breast Cancer, Pima, Synthetic)
 ├── metrics_calculator.py           # Comprehensive metrics computation
 ├── classifier_comparison_app.py    # Streamlit GUI application
@@ -86,7 +87,7 @@ streamlit run classifier_comparison_app.py
 Compares LS-FLSTSVM against:
 - Linear SVM (SMO implementation)
 - Logistic Regression (Batch Gradient Descent + L2)
-- Perceptron (Pocket algorithm)
+- Twin SVM (Twin hyperplane approach)
 
 ## Algorithms Implemented
 
@@ -95,6 +96,12 @@ Compares LS-FLSTSVM against:
 - Fuzzy membership weights: emphasizes important samples, down-weights noisy ones
 - Least Squares loss: enables fast LSSMO solver
 - Nonlinear extension: supports kernel methods
+
+### Twin SVM
+- Twin hyperplane approach: two non-parallel hyperplanes
+- Each hyperplane close to one class and far from the other
+- Supports linear and kernel-based classification (RBF, Polynomial)
+- Efficient QPP-based optimization
 
 ### LSSMO Solver
 - Coordinate descent optimization
@@ -105,7 +112,7 @@ Compares LS-FLSTSVM against:
 ### Baseline Classifiers
 - **Linear SVM**: SMO algorithm with kernel support
 - **Logistic Regression**: Batch gradient descent with L2 regularization
-- **Perceptron**: Pocket algorithm for non-separable data
+- **Twin SVM**: Twin hyperplane formulation with kernel support
 
 ## Performance Example
 

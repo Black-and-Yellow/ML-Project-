@@ -1,7 +1,4 @@
-"""
-Example usage of Large Scale Non-Linear LSTWSVM
-Save this file along with Large_Scale_NonL_LSTWSVM.py and LSSMO.py
-"""
+# Example usage
 
 import numpy as np
 from Large_Scale_NonL_LSTWSVM import Large_Scale_NonL_LSTWSVM
@@ -108,32 +105,6 @@ except Exception as e:
     import traceback
     traceback.print_exc()
 
-# Example 3: Loading from CSV file
-"""
-import pandas as pd
+# CSV example removed
 
-# Load CSV file
-train_df = pd.read_csv('train_data.csv')
-test_df = pd.read_csv('test_data.csv')
-
-# Convert to numpy arrays
-A_train = train_df.values  # Make sure last column is labels (1 or -1)
-A_test = test_df.values
-
-# Then run the classifier as shown above
-"""
-
-# Example 4: Using your own data format
-"""
-# If you have X and y separately:
-X_train = ...  # Your training features (n_samples, n_features)
-y_train = ...  # Your training labels (n_samples,) - values should be 1 or -1
-X_test = ...   # Your test features
-y_test = ...   # Your test labels
-
-# Combine them
-A_train = np.column_stack([X_train, y_train])
-A_test = np.column_stack([X_test, y_test])
-
-# Then run the classifier
-"""
+# Custom data example removed
