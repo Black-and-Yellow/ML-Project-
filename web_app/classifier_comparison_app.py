@@ -314,9 +314,9 @@ def main():
         st.sidebar.success(f"Loaded: {len(y_train)} train, {len(y_test)} test samples")
         
     elif dataset_choice == "Synthetic NDC":
-        n_samples = st.sidebar.slider("Total samples:", 500, 5000, 1000, 100)
+        n_samples = st.sidebar.slider("Total samples:", 500, 50000, 1000, 100)
         n_features = st.sidebar.slider("Features:", 5, 50, 10, 5)
-        imb_ratio = st.sidebar.slider("Imbalance ratio:", 1.0, 10.0, 3.0, 0.5)
+        imb_ratio = st.sidebar.slider("Imbalance ratio:", 1.0, 1000.0, 3.0, 0.5)
         cluster_sep = st.sidebar.slider("Cluster separation:", 0.5, 5.0, 2.0, 0.5)
         
         X_train, X_test, y_train, y_test = DatasetLoader.generate_synthetic_ndc(
